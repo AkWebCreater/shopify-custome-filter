@@ -1,0 +1,150 @@
+{% if collection.all_tags.size > 1 %}
+
+  {% comment %}
+    Get all of the filter groups
+  {% endcomment %}
+  {% for tag in collection.all_tags %}
+    {% if tag contains '_' %}
+      {% assign splitTag = tag | split: '_' %}
+      {% unless filterTags contains splitTag.first %}
+        {% capture filterTags %}{{ filterTags }}+{{ splitTag.first }}{% endcapture %}
+      {% endunless %}
+    {% endif %}
+  {% endfor %}
+  {% assign filterTags = filterTags | slice: 1, filterTags.size | split: '+' %}
+
+  {% comment %}
+    Define a checkbox form for the filters
+  {% endcomment %}
+  <form id="custom-collection-filter" action="/collections/{{ collection.handle }}">
+    {% comment %}
+      Loop through the main filter groups for the titles
+    {% endcomment %}
+    {% for tag in filterTags %}
+     <div class="collection-sidebar--section">
+      <h2>Filter by {{ tag | capitalize }}</h2>
+     
+        {% comment %}
+          Add checkboxes for each filter group
+        {% endcomment %}
+        {% for aTag in collection.all_tags %}
+          {% assign tempTag = aTag | split: '_' %}
+          {% if tag == tempTag.first %}
+       <a data-index="{{forloop.index}}"><label><span>{{ tempTag.last }}</span>
+            {% if current_tags contains aTag %}
+              <input type="radio" checked name="{{ tempTag.first }}" value="{{ aTag }}">
+            {% else %}
+              <input type="radio" name="{{ tempTag.first }}" value="{{ aTag }}">
+         
+            {% endif %}
+         </label><span class="clear-icon"></span></a>
+          {% endif %}
+        {% endfor %}
+      
+      
+    </div>
+     <div class="subcollections-collection__border" style="border-bottom:1px solid #ccc"></div>
+    {% endfor %}
+      <button type="button" class="btn clear-filter" >Clear</button>
+  </form>
+
+
+{% endif %}
+
+			</div>
+
+		
+
+{% endif %}
+ <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
+  <script type="text/javascript">
+    /*
+      We are searching a specific collection
+      so we will use the /collections/collection-handle for the search
+    */
+    $(document).ready(function(){
+      window.collectionHandle = '{{collection.handle}}';
+          $('.collection-sidebar--section input:checked').closest('[data-index]').find('.clear-icon').html('<span class="filter-remove">x</span')
+      $('.collection-sidebar--section input:checked').closest('[data-index]').addClass('filtred')
+//       remove filter applied
+      var handle = window.collectionHandle;
+      var windoL = document.location.href;
+      var col = windoL.split(handle+'/');
+//       alert(col[1])
+      if(col[1] != ''){
+      $('.clear-filter').show();
+      }
+      $('.clear-filter').click(function(){
+      document.location.href = '/collections/{{ collection.handle }}/';
+      })
+//       
+        $('#custom-collection-filter').submit(function(event) {
+      event.preventDefault();
+      var filterUrl = '';
+          var check = [];
+      var data = $(this).serializeArray();
+      for (var i = 0; i < data.length; i++) {
+//         alert(data[i].value)
+        filterUrl += data[i].value;
+        if (i !== (data.length - 1)) {
+          filterUrl += '+';
+        }
+      }
+      document.location.href = '/collections/{{ collection.handle }}/' + filterUrl;
+    });
+      $(document).on('click','.collection-sidebar--section a',function(e){
+        e.stopPropagation()
+//         alert('hi')
+      $(this).find('.clear-icon').html('<span class="filter-remove">x</span');
+          $(this).addClass('filtred')
+        $(this).siblings().find('.clear-icon').html('');
+        $(this).closest('form').submit()
+      })
+  
+    })
+  </script>
+  <style>
+  .collection-sidebar--section input{
+margin-left:10px;
+  width:0;
+  height:0;
+visibility: hidden;
+}
+radio:checked+span{
+font-weight:bold;
+}
+.collection-sidebar--section label{
+margin:0;
+  cursor: pointer !important;
+}
+.collection-sidebar--section a{
+  display:block;
+cursor:pointer;
+display: flex;
+    justify-content: space-between;
+cursor: pointer !important;
+}
+.collection-sidebar--section h2{
+margin:8px 0;
+}
+.collection-sidebar--section{
+margin-bottom:20px;
+}
+
+.clear-filter,.collection-sidebar--section .btn.submit{
+display:none;
+}
+.collection-sidebar--section a .clear-icon .filter-remove{
+display:none;
+} 
+.collection-sidebar--section a.filtred .clear-icon .filter-remove{
+line-height: 1;
+    padding: 3px 7px;
+    border-radius: 50%;
+    color: #fff;
+    text-align: center;
+    background: #ccc;
+    display: inline-block;
+}
+
+  </style>
